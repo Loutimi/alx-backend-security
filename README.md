@@ -38,7 +38,7 @@ A robust Django-based security system that provides **intelligent rate limiting*
 
 ### Prerequisites
 
-- Python 3.8+
+- Python 3.10+
 - Redis server
 - Git
 
