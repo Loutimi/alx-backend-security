@@ -140,11 +140,13 @@ GEOLOCATION_SETTINGS = {
 
 # Cache settings for rate limiting
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",  # DB 1 for cache
     }
 }
-RATELIMIT_USE_CACHE = "default"  # Use default cache 
+
+RATELIMIT_USE_CACHE = "default"
 
 # Global limits
 RATELIMITS = {
@@ -152,3 +154,15 @@ RATELIMITS = {
     "anonymous": "5/m",       # 5 requests per minute
 }
 
+# Celery settings
+CELERY_BROKER_URL = "redis://localhost:6379/0" # DB 0 for celery
+CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
+
+from celery.schedules import crontab
+
+CELERY_BEAT_SCHEDULE = {
+    "flag-suspicious-ips-hourly": {
+        "task": "ip_tracking.tasks.flag_suspicious_ips",
+        "schedule": crontab(minute=0, hour="*"),
+    },
+}
