@@ -2,6 +2,7 @@ from django.http import HttpResponseForbidden
 from django.utils.timezone import now
 from .models import RequestLog, BlockedIP
 
+
 class RequestLoggingMiddleware:
     """
     Middleware that logs requests, blocks IPs in BlockedIP,

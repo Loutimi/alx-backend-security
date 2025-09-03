@@ -50,8 +50,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "django_ip_geolocation.middleware.GeolocationMiddleware",   # geolocation 
-    "ip_tracking.middleware.RequestLoggingMiddleware",   ## custom middleware
+    "django_ip_geolocation.middleware.GeolocationMiddleware",  # geolocation
+    "ip_tracking.middleware.RequestLoggingMiddleware",  ## custom middleware
 ]
 
 ROOT_URLCONF = "alx_backend_security.urls"
@@ -135,7 +135,7 @@ GEOLOCATION_SETTINGS = {
     "GEOLOCATION_DEFAULT_LOCATION": {
         "country_name": "Unknown",
         "city": "Unknown",
-    }
+    },
 }
 
 # Cache settings for rate limiting
@@ -151,11 +151,11 @@ RATELIMIT_USE_CACHE = "default"
 # Global limits
 RATELIMITS = {
     "authenticated": "10/m",  # 10 requests per minute
-    "anonymous": "5/m",       # 5 requests per minute
+    "anonymous": "5/m",  # 5 requests per minute
 }
 
 # Celery settings
-CELERY_BROKER_URL = "redis://localhost:6379/0" # DB 0 for celery
+CELERY_BROKER_URL = "redis://localhost:6379/0"  # DB 0 for celery
 CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
 
 from celery.schedules import crontab
