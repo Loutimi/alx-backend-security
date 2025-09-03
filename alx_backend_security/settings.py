@@ -137,3 +137,18 @@ GEOLOCATION_SETTINGS = {
         "city": "Unknown",
     }
 }
+
+# Cache settings for rate limiting
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}
+RATELIMIT_USE_CACHE = "default"  # Use default cache 
+
+# Global limits
+RATELIMITS = {
+    "authenticated": "10/m",  # 10 requests per minute
+    "anonymous": "5/m",       # 5 requests per minute
+}
+
