@@ -1,199 +1,216 @@
 # 🛡️ Django Rate Limiting & Suspicious IP Tracking
 
-A Django-based project that provides **rate limiting** for user
-authentication endpoints and tracks **suspicious IP addresses** using
-Celery tasks. The system is designed to prevent brute-force login
-attempts, block malicious IPs, and monitor abnormal request activity.
+A robust Django-based security system that provides **intelligent rate limiting** for authentication endpoints and **automated suspicious IP tracking** using Celery background tasks. Designed to prevent brute-force attacks, block malicious IPs, and monitor abnormal request patterns in real-time.
 
-------------------------------------------------------------------------
+## ✨ Key Features
 
-## ✨ Features
+- **🚦 Dynamic Rate Limiting**
+  - Authenticated users: 10 requests/minute
+  - Anonymous users: 5 requests/minute
+  - Redis-backed for consistency across multiple workers
 
--   🚦 **Dynamic rate limiting** for authenticated vs anonymous users\
--   📌 **Redis-backed cache** for consistent rate limiting across
-    workers\
--   📝 **Request logging** with IP, path, timestamp, country & city\
--   🔒 **Blocked IP model** to prevent repeated offenders from accessing
-    the app\
--   🔎 **Suspicious IP tracking** with configurable rules:
-    -   More than 100 requests/hour
-    -   Accessing sensitive endpoints (e.g., `/login`, `/admin`)\
--   ⏰ **Hourly Celery task** to analyze IP activity\
--   🗄️ **Django ORM models** for persistence and auditing\
--   🐳 **Redis integration** for caching and task brokering
+- **📊 Comprehensive Request Monitoring**
+  - Real-time IP tracking with geolocation
+  - Request path and timestamp logging
+  - Country and city resolution
 
-------------------------------------------------------------------------
+- **🔒 Intelligent IP Security**
+  - Automatic blocking of repeat offenders
+  - Suspicious activity detection (100+ requests/hour)
+  - Sensitive endpoint monitoring (`/login`, `/admin`)
 
-## 🛠️ Tech Stack
+- **⚡ Background Processing**
+  - Hourly Celery tasks for IP analysis
+  - Scalable task queue architecture
+  - Automated threat detection
 
--   **Django** (Backend framework)\
--   **Django Ratelimit** (Rate limiting)\
--   **Celery** (Task queue)\
--   **Redis** (Broker, result backend, and cache)\
--   **SQLite** (Database --- or any Django-supported DB)
+## 🛠️ Technology Stack
 
-------------------------------------------------------------------------
+| Component | Technology | Purpose |
+|-----------|------------|---------|
+| **Backend** | Django | Web framework & API |
+| **Rate Limiting** | Django Ratelimit | Request throttling |
+| **Task Queue** | Celery | Background job processing |
+| **Cache & Broker** | Redis | Caching, rate limiting & task brokering |
+| **Database** | SQLite/PostgreSQL | Data persistence |
 
-## ⚙️ Setup & Installation
+## 🚀 Quick Start
 
-### 1. Clone the Repository
+### Prerequisites
 
-``` bash
-git clone https://github.com/loutimi/alx-backend-security.git
-cd alx-backend-security
-```
+- Python 3.8+
+- Redis server
+- Git
 
-### 2. Create & Activate Virtual Environment
+### Installation
 
-``` bash
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
-```
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/loutimi/alx-backend-security.git
+   cd alx-backend-security
+   ```
 
-### 3. Install Dependencies
+2. **Set up virtual environment**
+   ```bash
+   python -m venv venv
+   
+   # Linux/macOS
+   source venv/bin/activate
+   
+   # Windows
+   venv\Scripts\activate
+   ```
 
-``` bash
-pip install -r requirements.txt
-```
+3. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-### 4. Configure Redis
+4. **Start Redis server**
+   ```bash
+   redis-server
+   ```
 
-Make sure Redis is installed and running locally:
+5. **Configure Django settings**
+   
+   Add to your `settings.py`:
+   ```python
+   # Redis Cache Configuration
+   CACHES = {
+       "default": {
+           "BACKEND": "django.core.cache.backends.redis.RedisCache",
+           "LOCATION": "redis://127.0.0.1:6379/1",
+       }
+   }
+   
+   # Rate limiting
+   RATELIMIT_USE_CACHE = "default"
+   
+   # Celery Configuration
+   CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
+   CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
+   ```
 
-``` bash
-redis-server
-```
+6. **Initialize database**
+   ```bash
+   python manage.py migrate
+   ```
 
-### 5. Configure Django Settings
+### Running the Application
 
-Update `settings.py`:
+Start all required services:
 
-``` python
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/1",  # DB 1 for cache
-    }
-}
-
-RATELIMIT_USE_CACHE = "default"
-
-CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"   # DB 0 for Celery
-CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
-```
-
-### 6. Run Database Migrations
-
-``` bash
-python manage.py migrate
-```
-
-### 7. Start Services
-
-Run Django server:
-
-``` bash
+```bash
+# Terminal 1: Django development server
 python manage.py runserver
-```
 
-Run Celery worker:
-
-``` bash
+# Terminal 2: Celery worker
 celery -A alx-backend-security worker -l info
-```
 
-Run Celery beat (for scheduled tasks):
-
-``` bash
+# Terminal 3: Celery beat scheduler
 celery -A alx-backend-security beat -l info
 ```
 
-------------------------------------------------------------------------
+## 📂 Project Architecture
 
-## 📂 Project Structure
+```
+alx-backend-security/
+├── ip_tracking/
+│   ├── models.py          # Data models (RequestLog, BlockedIP, SuspiciousIP)
+│   ├── tasks.py           # Celery background tasks
+│   ├── views.py           # Rate-limited authentication views
+│   ├── middleware.py      # Request logging with geolocation
+│   └── urls.py            # URL routing
+├── alx-backend-security/
+│   ├── celery.py          # Celery configuration
+│   ├── settings.py        # Django settings
+│   └── urls.py            # Main URL configuration
+├── requirements.txt       # Python dependencies
+└── manage.py             # Django management script
+```
 
-    alx-backend-security/
-    │── ip_tracking/
-    │   ├── models.py        # RequestLog, BlockedIP, SuspiciousIP models
-    │   ├── tasks.py         # Celery task to analyze IP activity
-    │   ├── views.py         # Login view with rate limiting
-    │   ├── middleware.py    # Logs requests with geolocation
-    │
-    │── alx-backend-security/
-    │   ├── celery.py        # Celery app setup
-    │   ├── settings.py      # Django + Redis + Ratelimit config
-    │
-    ├── requirements.txt
-    ├── manage.py
-
-------------------------------------------------------------------------
-
-## 📊 Models
+## 🗄️ Database Models
 
 ### RequestLog
+Tracks all incoming requests with comprehensive metadata.
 
-  -------------------------------------------------------------------------
-  Field        Type                Description
-  ------------ ------------------- ----------------------------------------
-  ip_address   GenericIPAddress    IP of the client making the request
-
-  timestamp    DateTime (auto_add) When the request was made
-
-  path         CharField           The endpoint accessed
-
-  country      CharField           Resolved country from IP (if available)
-               (nullable)          
-
-  city         CharField           Resolved city from IP (if available)
-               (nullable)          
-  -------------------------------------------------------------------------
+| Field | Type | Description |
+|-------|------|-------------|
+| `ip_address` | GenericIPAddressField | Client IP address |
+| `timestamp` | DateTimeField | Request timestamp (auto-generated) |
+| `path` | CharField | Accessed endpoint |
+| `country` | CharField (nullable) | Geolocation country |
+| `city` | CharField (nullable) | Geolocation city |
 
 ### BlockedIP
+Maintains permanently blocked IP addresses.
 
-  -------------------------------------------------------------------------
-  Field        Type                Description
-  ------------ ------------------- ----------------------------------------
-  ip_address   GenericIPAddress    Permanently blocked IP address
-
-  -------------------------------------------------------------------------
+| Field | Type | Description |
+|-------|------|-------------|
+| `ip_address` | GenericIPAddressField | Blocked IP address |
+| `reason` | TextField | Blocking reason |
+| `blocked_at` | DateTimeField | When IP was blocked |
 
 ### SuspiciousIP
+Records IPs flagged for suspicious activity.
 
-  -------------------------------------------------------------------------
-  Field        Type                Description
-  ------------ ------------------- ----------------------------------------
-  ip_address   GenericIPAddress    The IP flagged as suspicious
+| Field | Type | Description |
+|-------|------|-------------|
+| `ip_address` | GenericIPAddressField | Flagged IP address |
+| `reason` | CharField | Flagging reason |
+| `timestamp` | DateTimeField | When flagged |
+| `request_count` | IntegerField | Number of requests in timeframe |
 
-  reason       CharField           Reason for flagging
+## ⚙️ Security Rules
 
-  timestamp    DateTime (auto_add) When the IP was flagged
-  -------------------------------------------------------------------------
+### Rate Limiting
+- **Anonymous users**: 5 requests per minute
+- **Authenticated users**: 10 requests per minute
+- **Rate limit key**: IP address for anonymous, User ID for authenticated
 
-------------------------------------------------------------------------
+### Suspicious Activity Detection
+- **High volume**: More than 100 requests per hour
+- **Sensitive endpoints**: Repeated access to `/login`, `/admin`, `/api/auth/`
+- **Automated blocking**: IPs exceeding thresholds are automatically flagged
 
-## 🚀 Usage
+### Background Monitoring
+- **Hourly analysis**: Celery task reviews request patterns
+- **Intelligent flagging**: Multi-criteria suspicious activity detection
+- **Escalation**: Repeated offenders moved to permanent block list
 
--   Anonymous users → limited to **5 requests/minute**\
--   Authenticated users → limited to **10 requests/minute**\
--   Every incoming request is logged with IP, path, timestamp, and
-    location (if resolved)\
--   Every hour, Celery runs a task to:
-    -   Check request logs
-    -   Flag IPs exceeding **100 requests/hour**
-    -   Flag IPs accessing sensitive paths (`/login`, `/admin`)
-    -   Store flagged IPs in `SuspiciousIP`
-    -   Optionally, add repeated offenders to `BlockedIP`
+## 🔧 Configuration Options
 
-------------------------------------------------------------------------
+### Rate Limiting Settings
+```python
+RATELIMITS = {
+    'anonymous': '5/m',      # 5 requests per minute
+    'authenticated': '10/m', # 10 requests per minute
+}
+```
 
-## 📜 License
+## 📈 Monitoring & Analytics
 
-MIT License. Free to use and modify.
+The system provides comprehensive monitoring through:
 
-------------------------------------------------------------------------
+- **Real-time request logging**
+- **Geographic IP tracking**
+- **Suspicious activity alerts**
+- **Automated threat response**
+- **Historical data analysis**
+
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 👨‍💻 Author
 
-**Rotimi Musa**\
-Backend Developer \| Data Enthusiast
+**Rotimi Musa**  
+Backend Developer | Security Enthusiast  
+🐙 [GitHub](https://github.com/loutimi)
+
+---
+
+<div align="center">
+  <strong>Built with ❤️ for Django security</strong>
+</div>
