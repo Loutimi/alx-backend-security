@@ -1,42 +1,40 @@
-import datetime
+from django.http import HttpResponseForbidden
 from django.utils.timezone import now
-from .models import RequestLog
+from .models import RequestLog, BlockedIP
 
 class RequestLoggingMiddleware:
     """
-    Middleware that logs each incoming request's IP address,
-    timestamp, and requested path into the database.
+    Middleware that logs requests and blocks IPs listed in BlockedIP.
     """
 
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
-        # Process request before view is called
-        self.log_request(request)
+        client_ip = self.get_client_ip(request)
 
-        # Continue to next middleware/view
-        response = self.get_response(request)
-        return response
+        # Block IP if in BlockedIP table
+        if BlockedIP.objects.filter(ip_address=client_ip).exists():
+            return HttpResponseForbidden("Your IP has been blocked.")
+
+        # Otherwise, log the request
+        self.log_request(request, client_ip)
+
+        return self.get_response(request)
 
     def get_client_ip(self, request):
         """Extract client IP address from request META."""
         x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
         if x_forwarded_for:
-            ip = x_forwarded_for.split(",")[0]  # first in list
+            ip = x_forwarded_for.split(",")[0]
         else:
             ip = request.META.get("REMOTE_ADDR", "")
         return ip
 
-    def log_request(self, request):
+    def log_request(self, request, client_ip):
         """Save request details into RequestLog model."""
-        ip = self.get_client_ip(request)
-        path = request.path
-        timestamp = now()
-
-        # Save into DB
         RequestLog.objects.create(
-            ip_address=ip,
-            path=path,
-            timestamp=timestamp
+            ip_address=client_ip,
+            path=request.path,
+            timestamp=now()
         )
