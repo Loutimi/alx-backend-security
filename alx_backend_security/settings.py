@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -38,6 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "ip_tracking",
+    "django_ip_geolocation",
 ]
 
 MIDDLEWARE = [
@@ -48,7 +50,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "ip_tracking.middleware.RequestLoggingMiddleware",
+    "django_ip_geolocation.middleware.GeolocationMiddleware",   # geolocation 
+    "ip_tracking.middleware.RequestLoggingMiddleware",   ## custom middleware
 ]
 
 ROOT_URLCONF = "alx_backend_security.urls"
@@ -122,3 +125,15 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# django-ip-geolocation settings
+GEOLOCATION_SETTINGS = {
+    "GEOLOCATION_ENABLED": True,
+    "GEOLOCATION_API_KEY": config("IPGEOLOCATION_API_KEY"),
+    "GEOLOCATION_API_URL": "https://api.ipgeolocation.io/ipgeo",
+    "GEOLOCATION_DEFAULT_LOCATION": {
+        "country_name": "Unknown",
+        "city": "Unknown",
+    }
+}
