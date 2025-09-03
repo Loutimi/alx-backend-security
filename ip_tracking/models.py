@@ -11,3 +11,10 @@ class RequestLog(models.Model):
 
     def __str__(self):
         return f"{self.ip_address} - {self.path} @ {self.timestamp}"
+
+
+class BlockedIP(models.Model):
+    """
+    Model to store blocked IP addresses.
+    """
+    ip_address = models.GenericIPAddressField(unique=True)
