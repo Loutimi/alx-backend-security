@@ -4,7 +4,8 @@ from .models import RequestLog, BlockedIP
 
 class RequestLoggingMiddleware:
     """
-    Middleware that logs requests and blocks IPs listed in BlockedIP.
+    Middleware that logs requests, blocks IPs in BlockedIP,
+    and saves geolocation (country, city) provided by django-ip-geolocation.
     """
 
     def __init__(self, get_response):
@@ -13,11 +14,11 @@ class RequestLoggingMiddleware:
     def __call__(self, request):
         client_ip = self.get_client_ip(request)
 
-        # Block IP if in BlockedIP table
+        # Block if IP is blacklisted
         if BlockedIP.objects.filter(ip_address=client_ip).exists():
             return HttpResponseForbidden("Your IP has been blocked.")
 
-        # Otherwise, log the request
+        # Log request with geolocation from request.geolocation
         self.log_request(request, client_ip)
 
         return self.get_response(request)
@@ -33,8 +34,15 @@ class RequestLoggingMiddleware:
 
     def log_request(self, request, client_ip):
         """Save request details into RequestLog model."""
+
+        geo = getattr(request, "geolocation", {})  # Provided by django-ip-geolocation
+        country = geo.get("country_name", "")
+        city = geo.get("city", "")
+
         RequestLog.objects.create(
             ip_address=client_ip,
             path=request.path,
-            timestamp=now()
+            timestamp=now(),
+            country=country,
+            city=city,
         )
